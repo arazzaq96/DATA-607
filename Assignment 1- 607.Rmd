@@ -1,0 +1,47 @@
+---
+title: "Assignmment 1- 607"
+output: html_document
+date: "2024-09-05"
+author: "Ariba Mandavia"
+---
+
+##Introduction:
+The data set offers predictions of soccer match outcomes based on FiveThirtyEight’s Soccer Power Index (SPI). This index is used to rate teams' offensive and defensive capabilities, which are then combined to generate win probabilities and expected scores for upcoming matches.
+
+spi_matches.csv contains match-by-match SPI ratings and forecasts back to 2016.
+Article link: https://projects.fivethirtyeight.com/soccer-predictions/
+ 
+I have selected meaningful columns, including match date, team names, Soccer Power Index (SPI) for both teams, and their respective win probabilities.
+Columns were renamed to make them more intuitive.
+
+```{r, include=FALSE}
+library(tidyverse)
+```
+
+
+```{r}
+
+spi_matches <- read_csv("https://projects.fivethirtyeight.com/soccer-api/club/spi_matches.csv")
+# Select a subset of the columns (Date, Team 1, Team 2, Team 1 SPI, Team 2 SPI, Win Probabilities)
+spi_matches_subset <- dplyr::select(spi_matches, date, team1, team2, spi1, spi2, prob1, prob2, probtie)
+
+# Rename columns for better clarity, explicitly calling dplyr's rename function
+spi_matches_subset <- dplyr::rename(spi_matches_subset,
+    Date = date,
+    Team_1 = team1,
+    Team_2 = team2,
+    Team_1_SPI = spi1,
+    Team_2_SPI = spi2,
+    Team_1_Win_Prob = prob1,
+    Team_2_Win_Prob = prob2,
+    Tie_Prob = probtie
+)
+
+# Display first few rows of the cleaned dataset
+head(spi_matches_subset)
+
+```
+
+
+##Conculusion: 
+We can use this dataset in future by implementing machine learning techniques to understand how SPI corelate with actual match outcome. 
