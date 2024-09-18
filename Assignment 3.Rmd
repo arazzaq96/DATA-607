@@ -1,0 +1,120 @@
+---
+title: "Assignment 3 DATA 607"
+author: "Ariba Mandavia"
+---
+
+1. Provide an example of at least three dataframes in R that demonstrate normalization. The dataframes can contain any data, either real or synthetic. Although normalization is typically done in SQL and relational databases, you are expected to show this example in R, as it is our main work environment in this course.
+
+
+
+Unnormalized Data: Contains non-atomic values.
+
+```{r}
+
+# Unnormalized data
+df_unnormalized <- data.frame(
+  OrderID = c(1, 2, 3),
+  CustomerName = c("Alice", "Bob", "Charlie"),
+  Items = c("Laptop, Mouse", "Tablet", "Phone, Headphones"),
+  TotalPrice = c(1500, 600, 1000),
+  Address = c("123 Elm St", "456 Oak St", "789 Pine St")
+)
+
+print("Unnormalized Data:")
+print(df_unnormalized)
+```
+First Normal Form (1NF): Ensures atomic values, no repeating groups
+
+```{r}
+# First Normal Form (1NF)
+df_1NF <- data.frame(
+  OrderID = c(1, 1, 2, 3, 3),
+  CustomerName = c("Alice", "Alice", "Bob", "Charlie", "Charlie"),
+  Item = c("Laptop", "Mouse", "Tablet", "Phone", "Headphones"),
+  TotalPrice = c(1000, 500, 600, 800, 200),
+  Address = c("123 Elm St", "123 Elm St", "456 Oak St", "789 Pine St", "789 Pine St")
+)
+
+print("First Normal Form (1NF):")
+print(df_1NF)
+
+```
+Second Normal Form (2NF): Eliminates partial dependencies by separating data into customer and order tables.
+
+```{r}
+# Second Normal Form (2NF)
+df_customers <- data.frame(
+  CustomerID = c(1, 2, 3),
+  CustomerName = c("Alice", "Bob", "Charlie"),
+  Address = c("123 Elm St", "456 Oak St", "789 Pine St")
+)
+
+df_orders <- data.frame(
+  OrderID = c(1, 1, 2, 3, 3),
+  CustomerID = c(1, 1, 2, 3, 3),  # Foreign key reference to customers
+  Item = c("Laptop", "Mouse", "Tablet", "Phone", "Headphones"),
+  TotalPrice = c(1000, 500, 600, 800, 200)
+)
+
+print("Customers Table:")
+print(df_customers)
+
+print("Orders Table:")
+print(df_orders)
+```
+Third Normal Form (3NF): Ensures no transitive dependencies (already satisfied in this case).
+
+```{r}
+print("Final Tables in Third Normal Form (3NF):")
+print("Customers Table:")
+print(df_customers)
+
+print("Orders Table:")
+print(df_orders)
+
+```
+Character Manipulation
+
+2. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/], provide code that identifies the majors that contain either "DATA" or "STATISTICS"
+
+
+```{r}
+
+# Load required libraries
+# Assume df is your already imported data frame
+# You can filter or manipulate df directly
+library(dplyr)
+library(stringr)
+
+# Filter majors that contain either "DATA" or "STATISTICS"
+majors_filtered <- Major_list %>%
+  filter(str_detect(Major, "DATA|STATISTICS"))
+
+# Display the filtered majors
+print(majors_filtered)
+
+
+```
+
+
+
+3. Describe, in words, what these expressions will match:
+
+(.)\1\1 = triplets of the same character
+"(.)(.)\\2\\1" = four-character palindrome structure
+(..)\1 =  two-character sequences that repeat
+"(.).\\1.\\1" = character repeated with one in between
+"(.)(.)(.).*\\3\\2\\1" = same three characters in reverse order, possibly with other characters in between.
+
+4. Construct regular expressions to match words that:
+
+Start and end with the same character: 
+^(.)\w*\1$ example will be radar
+
+Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)
+(?i)(..).*\1 example will be banana
+
+Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+(?i)(.)(?=.*\1.*\1) example will be committee
+
+
