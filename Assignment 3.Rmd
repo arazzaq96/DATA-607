@@ -78,24 +78,32 @@ Character Manipulation
 2. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/], provide code that identifies the majors that contain either "DATA" or "STATISTICS"
 
 
+
+
 ```{r}
 
 # Load required libraries
-# Assume df is your already imported data frame
-# You can filter or manipulate df directly
 library(dplyr)
 library(stringr)
 
-# Filter majors that contain either "DATA" or "STATISTICS"
-majors_filtered <- Major_list %>%
+# Load the dataset (replace with the actual path)
+df_majors <- read.csv("/Users/aribarazzaq/Downloads/majors-list.csv", stringsAsFactors = FALSE)
+
+# Display the first few rows and check the column names
+print(head(df_majors))
+print(colnames(df_majors))
+
+# Assuming the column name for majors is 'Major' (or adjust as needed)
+majors_filtered <- df_majors %>%
   filter(str_detect(Major, "DATA|STATISTICS"))
 
 # Display the filtered majors
 print(majors_filtered)
 
 
-```
 
+
+```
 
 
 3. Describe, in words, what these expressions will match:
