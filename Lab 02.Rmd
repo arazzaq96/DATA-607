@@ -44,6 +44,9 @@ dbDisconnect(con)
 
 
 ```
+```{r}
+print(movie_data)
+```
 #Part 4: Missing data strategy
  Implement an approach to missing data
  Explain why you decided to take the chosen approach: 
@@ -51,18 +54,11 @@ dbDisconnect(con)
 
 
 ```{r}
-# Replace missing values (NA) with the column mean
-for (col in names(movie_data)[-1]) {
-    movie_data[[col]][is.na(movie_data[[col]])] <- mean(movie_data[[col]], na.rm = TRUE)
-}
 
-# Check the imputed data
-print(movie_data)
-
-```
-
-```{r}
-
+  # Ensure that all columns (except 'Name') are numeric
+for (col in names(movie_data)[-1]) {  # Skip the 'Name' column
+  # Convert the column to numeric if it's not already
+  movie_data[[col]] <- as.numeric(movie_data[[col]])
   
   # Calculate the mean of the column, ignoring 0s in the mean calculation
   column_mean <- mean(movie_data[[col]][movie_data[[col]] != 0], na.rm = TRUE)
@@ -72,8 +68,10 @@ print(movie_data)
   
   # Replace 0s with the rounded column mean
   movie_data[[col]][movie_data[[col]] == 0] <- rounded_mean
-
+}
 
 # Check the modified data
-  print(movie_data)
+print(movie_data)
+
+ 
 ```
