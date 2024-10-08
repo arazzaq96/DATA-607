@@ -1,0 +1,76 @@
+---
+title: "Assigment 4"
+output:
+  html_document:
+    df_print: paged
+date: "2024-10-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+# Load necessary libraries
+library(readr)
+library(dplyr)
+library(tidyr)
+
+# Read the CSV file (use `skip = 1` to skip the first empty row)
+arrival_delays <- read_csv("/Users/aribarazzaq/Desktop/A_D.csv")
+
+# Check the column names
+names(arrival_delays)
+
+# View the first few rows of the dataset to check if it is loaded correctly
+head(arrival_delays)
+
+# View the column names
+names(arrival_delays)
+
+# Fill in the missing airline names
+arrival_delays <- arrival_delays %>%
+  fill(...1, .direction = "down") # Replace '...1' if the column name is different
+
+# Pivot to long format: transform destination columns into rows
+arrival_delays_long <- arrival_delays %>%
+  pivot_longer(cols = starts_with("Los Angeles"), # Adjust based on your actual destination column names
+               names_to = "Destination",          # This creates a new 'Destination' column
+               values_to = "Flights") %>%         # This contains the flight numbers (delayed or on-time)
+  rename(Airline = ...1, Status = ...2) %>%       # Rename the columns for better readability
+  filter(!is.na(Flights))                         # Filter out any empty rows
+
+# View the tidy dataset
+head(arrival_delays_long)
+
+# Summarize on-time and delayed flights for each airline
+summary_delays <- arrival_delays_long %>%
+  group_by(Airline, Status) %>%
+  summarize(Total_Flights = sum(Flights))
+
+# View the summary
+print(summary_delays)
+
+
+
+
+```
+
+```{r}
+# Load ggplot2 for plotting
+library(ggplot2)
+
+# Create a bar plot comparing on-time and delayed flights by destination and airline
+ggplot(arrival_delays_long, aes(x = Destination, y = Flights, fill = Status)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ Airline) +
+  labs(title = "Comparison of On-time and Delayed Flights by Airline",
+       x = "Destination",
+       y = "Number of Flights")
+
+```
+
+
+
+
