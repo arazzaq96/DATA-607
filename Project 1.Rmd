@@ -1,0 +1,128 @@
+
+---
+title: "Chess Tournament Results"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(stringr)
+
+```
+
+
+```{r}
+ # Load necessary libraries
+library(tidyverse)
+
+# Read the tournament data from the text file
+data <- readLines("/Users/aribarazzaq/Desktop/Tournamentinfo.txt")
+
+# Initialize vectors to store player data
+player_names <- c()
+player_states <- c()
+total_points <- c()
+pre_ratings <- c()
+
+# Loop through the data to extract player information
+for (i in 1:length(data)) {
+  # Only process lines that start with numbers (player entries)
+  if (grepl("^\\s*\\d+\\s*\\|", data[i])) {
+    player_info <- strsplit(data[i], "\\|")[[1]]
+    # Extract player name and state
+    player_name <- str_trim(player_info[2])
+    player_points <- as.numeric(str_trim(player_info[3]))
+    
+    # The state is usually found on the next line
+    if (i + 1 <= length(data)) {
+      player_state <- str_trim(strsplit(data[i + 1], "\\|")[[1]][1])
+      # Extract pre-rating
+      pre_rating <- as.numeric(str_match(data[i + 1], "R: ([0-9]+)")[, 2])
+      
+      # Store the results
+      player_names <- c(player_names, player_name)
+      player_states <- c(player_states, player_state)
+      total_points <- c(total_points, player_points)
+      pre_ratings <- c(pre_ratings, pre_rating)
+    }
+  }
+}
+
+# Create data frame to check the results
+chess_results <- data.frame(
+  Name = player_names,
+  State = player_states,
+  Points = total_points,
+  Pre_Rating = pre_ratings
+)
+
+# Print the data frame to check the results
+print(chess_results)
+
+# Initialize vector for average opponent ratings
+avg_opponent_ratings <- c()
+
+# Loop through the data again to extract opponent ratings
+for (i in 1:length(data)) {
+  # Only process lines that start with numbers (player entries)
+  if (grepl("^\\s*\\d+\\s*\\|", data[i])) {
+    # Extract opponents from the round data in the line
+    opponents <- str_extract_all(data[i], "W\\s*(\\d+)|L\\s*(\\d+)|D\\s*(\\d+)")[[1]]
+    opponent_nums <- as.numeric(gsub("[^0-9]", "", opponents))
+
+    # Debugging: Print extracted opponent numbers
+    print(paste("Opponent Numbers:", paste(opponent_nums, collapse = ", ")))
+
+    # Get the pre-ratings for each opponent
+    opponent_ratings <- sapply(opponent_nums, function(opponent) {
+      # Match the line containing the opponent's data
+      opp_line <- grep(paste0("^\\s*", opponent, "\\s*\\|"), data, value = TRUE)
+      if (length(opp_line) > 0) {
+        # Print the entire matched opponent line
+        print(paste("Matched Opponent Line:", opp_line[1]))
+        
+        # Extract the rating using a simple approach
+        # This assumes the rating follows the pattern of the first number after the player's name
+        rating_match <- str_extract(opp_line[1], "\\|\\s*(\\d+\\.\\d+)\\s*\\|")
+        if (!is.na(rating_match)) {
+          return(as.numeric(gsub("\\|\\s*|\\s*", "", rating_match)))  # Clean and return the number
+        } else {
+          print(paste("No rating found for opponent:", opponent))
+        }
+      }
+      return(NA)
+    })
+
+    # Debugging: Print opponent ratings
+    print(paste("Opponent Ratings:", paste(opponent_ratings, collapse = ", ")))
+
+    # Calculate the average opponent rating
+    avg_rating <- mean(opponent_ratings, na.rm = TRUE)
+    avg_opponent_ratings <- c(avg_opponent_ratings, avg_rating)
+  }
+}
+
+# Add the average opponent ratings to the data frame
+chess_results$Avg_Opponent_Rating <- avg_opponent_ratings
+
+# Print the updated data frame to check the results
+print(chess_results)
+
+
+# Print and export results
+write.csv(chess_results, "/Users/aribarazzaq/Desktop/chess_results_fixed.csv", row.names = FALSE)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
