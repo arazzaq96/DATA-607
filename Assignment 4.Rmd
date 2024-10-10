@@ -70,6 +70,11 @@ ggplot(arrival_delays_long, aes(x = Destination, y = Flights, fill = Status)) +
        y = "Number of Flights")
 
 ```
+Alaska Airlines had 3274 flights which were  on-time where as 501 were delayed.
+This gives Alaska airline a good on-time performance ratio.
+AM West Airlines had 6438 flights which were on-time where as 787 were delayed, Eventhough AM West has more number of  flights, the ratio of on-time to delayed flights is not as favorable as Alaska's
+
+So Alaska airline will be my choice since it is on time. 
 
 
 
