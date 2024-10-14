@@ -1,0 +1,102 @@
+---
+title: "Project 2 a"
+output: html_document
+---
+
+Introduction:
+
+https://data.wa.gov/education/Childcare-Need-Supply-All-/hiqz-y2vv/data_preview
+
+The Childcare Need and Supply Dataset provides information on the demand and supply of childcare services across various geographic locations, age groups, and income brackets. The dataset offers key metrics such as:
+
+Subsidized care, private care estimates, and unserved children.
+Percent of childcare needs met, segmented by income bracket and age group.
+
+
+```{r}
+# Load the necessary libraries
+library(tidyverse)
+
+# Load the dataset
+childcare_data <- read.csv("/Users/aribarazzaq/Desktop/Childcare_Need___Supply__All__20241012.csv")
+
+# Preview the structure
+str(childcare_data)
+
+```
+```{r}
+# Rename columns for better readability
+childcare_data <- childcare_data %>%
+  rename(
+    geographic_unit = Geographic.Unit,
+    geographic_id = Geographic.ID,
+    geographic_name = Geographic.Name,
+    income_bracket = State.Median.Income.Bracket,
+    age_group = Age.Group,
+    subsidized_care = Childcare.Subsidized,
+    private_care = Private.Care.Estimate,
+    children_receiving_care = Estimated.Children.Receiving.Childcare,
+    unserved_children = Estimate.of.Unserved,
+    percent_need_met = Percent.Need.Met
+  )
+
+```
+
+```{r}
+# Check for missing values
+sum(is.na(childcare_data))
+
+# Drop rows with missing values, if any
+childcare_data <- childcare_data %>% drop_na()
+
+```
+
+```{r}
+# Transform care-related metrics into long format
+childcare_long <- childcare_data %>%
+  pivot_longer(
+    cols = subsidized_care:percent_need_met,
+    names_to = "care_type",
+    values_to = "value"
+  )
+
+# Preview the long format data
+head(childcare_long)
+
+```
+
+```{r}
+# Summarize care metrics by age group
+age_group_summary <- childcare_long %>%
+  group_by(age_group, care_type) %>%
+  summarise(avg_value = mean(value, na.rm = TRUE))
+
+print(age_group_summary)
+
+```
+
+```{r}
+# Create a bar plot of average percent need met by income bracket
+ggplot(childcare_long %>% filter(care_type == "percent_need_met"), 
+       aes(x = income_bracket, y = value, fill = income_bracket)) +
+  geom_bar(stat = "summary", fun = "mean") +
+  labs(title = "Average Percent of Childcare Need Met by Income Bracket",
+       x = "Income Bracket", y = "Percent Need Met") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+```{r}
+# Identify age groups with the most unserved children
+unserved_summary <- childcare_data %>%
+  group_by(age_group) %>%
+  summarise(total_unserved = sum(unserved_children, na.rm = TRUE)) %>%
+  arrange(desc(total_unserved))
+
+print(unserved_summary)
+
+```
+
+Age Groups: The age groups with the highest number of unserved children can be identified, helping policymakers target resources.
+Income Brackets: There are clear disparities in childcare access, with lower-income families having lower percent needs met.
+Data Transformation: Pivoting to a long format allowed us to analyze the data more flexibly.
+
