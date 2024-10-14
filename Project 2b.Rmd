@@ -1,0 +1,101 @@
+---
+title: "Project 2 b"
+output: html_document
+---
+
+Introduction:
+https://github.com/rfordatascience/tidytuesday/blob/master/data/2024/2024-09-24/country_results_df.csv
+The Country Results Dataset contains team and individual performance data from various countries participating in competitions. It includes:
+
+Team size (all, male, female) and participant scores (p1 to p7).
+Award counts: Gold, silver, bronze, and honorable mentions.
+Leaders and deputy leaders for each country’s team.
+
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(stringr)
+
+# Step 1: Load the Dataset
+country_data <- read.csv("/Users/aribarazzaq/Desktop/country_results_df.csv")
+
+# Inspect the structure and first few rows
+str(country_data)
+head(country_data)
+
+# Step 2: Tidy the Data
+# Pivot participant scores (p1 to p7) from wide to long format
+country_long <- country_data %>%
+  pivot_longer(
+    cols = starts_with("p"),  # Pivot all p1 to p7 columns
+    names_to = "participant", 
+    values_to = "score"
+  )
+
+# Preview the tidied data
+head(country_long)
+
+# Step 3: Data Transformation and Analysis
+
+## 3.1: Calculate the average participant score per country
+average_scores <- country_long %>%
+  group_by(country) %>%
+  summarise(avg_score = mean(score, na.rm = TRUE)) %>%
+  arrange(desc(avg_score))
+
+# View the average scores
+print(average_scores)
+
+## 3.2: Summarize total awards by country
+awards_summary <- country_data %>%
+  group_by(country) %>%
+  summarise(
+    total_gold = sum(awards_gold, na.rm = TRUE),
+    total_silver = sum(awards_silver, na.rm = TRUE),
+    total_bronze = sum(awards_bronze, na.rm = TRUE),
+    total_honorable_mentions = sum(awards_honorable_mentions, na.rm = TRUE)
+  )
+
+# View the awards summary
+print(awards_summary)
+
+# Step 4: Visualization - Average Participant Scores by Country
+
+# Filter the top 20 countries by average score and wrap long names
+top_countries <- average_scores %>%
+  slice_head(n = 20) %>%
+  mutate(country = str_wrap(country, width = 15))  # Wrap long names for readability
+
+# Create a polished plot for top 20 countries by average score
+ggplot(top_countries, aes(x = reorder(country, avg_score), y = avg_score, fill = avg_score)) +
+  geom_bar(stat = "identity") +
+  theme_minimal(base_size = 15) +  # Adjust base font size for readability
+  coord_flip() +  # Horizontal bars for better fit
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +  # Color gradient
+  labs(
+    title = "Top 20 Countries by Average Participant Score",
+    x = "Country", y = "Average Score"
+  ) +
+  theme(
+    axis.text.y = element_text(size = 10),  # Adjust y-axis text size
+    axis.text.x = element_text(size = 12),  # Adjust x-axis text size
+    plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),  # Centered, bold title
+    legend.position = "none"  # Remove legend for simplicity
+  )
+
+
+```
+
+
+Data Tidying:
+
+Used pivot_longer() to reshape participant scores into long format.
+Data Transformation:
+
+Calculated average participant scores per country.
+Summarized total awards (gold, silver, bronze, honorable mentions) per country.
+Visualization:
+
+Created a horizontal bar plot with the top 20 countries by average score.
+Used color gradients to improve visual appeal and wrapped long country names for better readability.
