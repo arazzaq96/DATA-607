@@ -1,0 +1,124 @@
+---
+title: "Project 2"
+output: html_document
+---
+
+Introduction:
+This report analyzes the Red Wine Quality dataset to explore how different chemical properties relate to the quality of the wine. Data tidying and transformations were performed using `tidyr` and `dplyr`.
+here is the link for the dataset:
+https://archive.ics.uci.edu/dataset/186/wine+quality
+
+
+
+
+To tidy and transform the Red Wine Quality dataset following actions have been taken:
+
+1. Renamed Columns: Made column names more descriptive.
+2. Handled Missing Values: Checked for and removed missing data.
+3. Long Format Transformation: transformed data to a long format for further analysis.
+4. Data Transformation: Added new variables and summarized key statistics for better insight into wine quality.
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(stringr)
+
+```
+
+```{r}
+# Load the required libraries
+library(tidyverse)
+
+# Load the red wine dataset with the correct delimiter
+wine_red <- read.csv("/Users/aribarazzaq/Desktop/wine+quality/winequality-red.csv", sep = ";")
+
+# Preview the first few rows to understand the structure
+head(wine_red)
+str(wine_red)
+
+```
+
+```{r}
+# Identify missing values
+sum(is.na(wine_red))
+
+# If missing values exist, we can remove them or use imputation
+wine_red <- wine_red %>% drop_na()
+
+```
+
+
+```{r}
+# Rename columns to remove spaces and make them more readable
+wine_red <- wine_red %>%
+  rename(
+    fixed_acidity = `fixed.acidity`,
+    volatile_acidity = `volatile.acidity`,
+    citric_acid = `citric.acid`,
+    residual_sugar = `residual.sugar`,
+    free_sulfur_dioxide = `free.sulfur.dioxide`,
+    total_sulfur_dioxide = `total.sulfur.dioxide`
+  )
+
+# Confirm new column names
+colnames(wine_red)
+
+```
+```{r}
+# Convert the data to long format for analysis
+wine_red_long <- wine_red %>%
+  pivot_longer(
+    cols = fixed_acidity:alcohol,
+    names_to = "characteristic",
+    values_to = "value"
+  )
+
+# View the long format dataset
+head(wine_red_long)
+
+```
+
+```{r}
+# Add a column to classify wine quality
+wine_red <- wine_red %>%
+  mutate(quality_label = ifelse(quality >= 7, "High Quality", "Low Quality"))
+
+# View the dataset with the new column
+head(wine_red)
+
+```
+```{r}
+# Summarize the average fixed acidity for each quality label
+acidity_summary <- wine_red %>%
+  group_by(quality_label) %>%
+  summarise(mean_fixed_acidity = mean(fixed_acidity, na.rm = TRUE))
+
+print(acidity_summary)
+
+```
+```{r}
+# Filter wines with high alcohol content (> 10%) and group by quality label
+high_alcohol_wines <- wine_red %>%
+  filter(alcohol > 10) %>%
+  group_by(quality_label) %>%
+  summarise(count = n())
+
+print(high_alcohol_wines)
+
+```
+
+
+To tidy and transform the Red Wine Quality dataset:
+
+Renamed Columns: Made column names more descriptive.
+Handled Missing Values: Checked for and removed missing data.
+Long Format Transformation: Optionally transformed data to a long format for further analysis.
+Data Transformation: Added new variables and summarized key statistics for better insight into wine quality.
+
+
+
+
+
