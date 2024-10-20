@@ -88,6 +88,11 @@ print(head(html_raw))
 print("XML Data Imported:")
 print(head(imported_xml_data))
 
+print("Parquet Data Imported:")
+print(head(imported_parquet_data))
+
+```
+
 
 Pros and Cons of Json:
 
@@ -106,7 +111,3 @@ Pros and Cons of Parquet:
 Pros: Efficient for large datasets, optimized for analytical queries, compact storage format.
 Cons: Less human-readable, not as commonly used as JSON/XML for web data exchange.
 
-print("Parquet Data Imported:")
-print(head(imported_parquet_data))
-
-```
