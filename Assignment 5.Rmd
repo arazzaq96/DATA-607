@@ -1,0 +1,94 @@
+---
+title: "Assigment 5"
+output:
+  html_document:
+    df_print: paged
+date: "2024-10-19"
+---
+
+```{r}
+# Install necessary packages
+packages <- c("jsonlite", "htmlTable", "XML", "arrow")
+new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+
+# Load the packages
+library(jsonlite)
+library(htmlTable)
+library(XML)
+library(arrow)
+
+# Create the original dataset as a data frame
+data <- data.frame(
+  Category = c("Electronics", "Electronics", "Electronics", "Electronics", 
+               "Home Appliances", "Home Appliances", "Home Appliances", "Home Appliances", 
+               "Clothing", "Clothing", "Clothing", "Clothing", 
+               "Books", "Books", "Books", "Books", 
+               "Sports Equipment", "Sports Equipment", "Sports Equipment", "Sports Equipment"),
+  Item_Name = c("Smartphone", "Smartphone", "Laptop", "Laptop", 
+                "Refrigerator", "Refrigerator", "Washing Machine", "Washing Machine", 
+                "T-Shirt", "T-Shirt", "T-Shirt", "Jeans", 
+                "Fiction Novel", "Fiction Novel", "Non-Fiction Guide", "Non-Fiction Guide", 
+                "Basketball", "Tennis Racket", "Tennis Racket", "Tennis Racket"),
+  Item_ID = c(101, 101, 102, 102, 201, 201, 202, 202, 301, 301, 301, 302, 401, 401, 402, 402, 501, 502, 502, 502),
+  Brand = c("TechBrand", "TechBrand", "CompuBrand", "CompuBrand", 
+            "HomeCool", "HomeCool", "CleanTech", "CleanTech", 
+            "FashionCo", "FashionCo", "FashionCo", "DenimWorks", 
+            "-", "-", "-", "-", 
+            "SportsGear", "RacketPro", "RacketPro", "RacketPro"),
+  Price = c(699.99, 699.99, 1099.99, 1099.99, 899.99, 899.99, 499.99, 499.99, 
+            19.99, 19.99, 19.99, 49.99, 14.99, 14.99, 24.99, 24.99, 29.99, 89.99, 89.99, 89.99),
+  Variation_ID = c("101-A", "101-B", "102-A", "102-B", "201-A", "201-B", "202-A", "202-B", 
+                   "301-A", "301-B", "301-C", "302-A", "401-A", "401-B", "402-A", "402-B", 
+                   "501-A", "502-A", "502-B", "502-B"),
+  Variation_Details = c("Color: Black, Storage: 64GB", "Color: White, Storage: 128GB", 
+                        "Color: Silver, Storage: 256GB", "Color: Space Gray, Storage: 512GB", 
+                        "Color: Stainless Steel, Capacity: 20 cu ft", "Color: White, Capacity: 18 cu ft", 
+                        "Type: Front Load, Capacity: 4.5 cu ft", "Type: Top Load, Capacity: 5.0 cu ft", 
+                        "Color: Blue, Size: S", "Color: Red, Size: M", "Color: Green, Size: L", 
+                        "Color: Dark Blue, Size: 32", "Format: Hardcover, Language: English", 
+                        "Format: Paperback, Language: Spanish", "Format: eBook, Language: English", 
+                        "Format: Paperback, Language: French", "Size: Size 7, Color: Orange", 
+                        "Material: Graphite, Color: Black", "Material: Aluminum, Color: Silver", 
+                        "Material: Aluminum, Color: Silver")
+)
+
+# 1. Convert to JSON and Import Back
+json_data <- toJSON(data, pretty = TRUE)
+write(json_data, "CUNYMart_data.json")
+imported_json_data <- fromJSON("CUNYMart_data.json")
+
+# 2. Convert to HTML and Import Back
+html_data <- htmlTable(data)
+write(html_data, "CUNYMart_data.html")
+html_raw <- readLines("CUNYMart_data.html")  # Importing as plain text
+
+# 3. Convert to XML and Import Back
+xml_data <- newXMLNode("Inventory")
+for (i in 1:nrow(data)) {
+  item_node <- newXMLNode("Item", parent = xml_data)
+  for (col in names(data)) {
+    newXMLNode(col, data[i, col], parent = item_node)
+  }
+}
+saveXML(xml_data, file = "CUNYMart_data.xml")
+imported_xml_data <- xmlToDataFrame("CUNYMart_data.xml")
+
+# 4. Convert to Parquet and Import Back
+write_parquet(data, "CUNYMart_data.parquet")
+imported_parquet_data <- read_parquet("CUNYMart_data.parquet")
+
+# Print summaries to verify imports
+print("JSON Data Imported:")
+print(head(imported_json_data))
+
+print("HTML Data Imported (raw text):")
+print(head(html_raw))
+
+print("XML Data Imported:")
+print(head(imported_xml_data))
+
+print("Parquet Data Imported:")
+print(head(imported_parquet_data))
+
+```
