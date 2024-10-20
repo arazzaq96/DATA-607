@@ -88,6 +88,24 @@ print(head(html_raw))
 print("XML Data Imported:")
 print(head(imported_xml_data))
 
+
+Pros and Cons of Json:
+
+Pros: Easy to read and write, widely used in web APIs, supports hierarchical data structures.
+Cons: Can be less efficient for very large datasets, lacks schema validation.
+
+Pros and Cons of HTML:
+Pros: Suitable for displaying data in web browsers, human-readable, supports styling.
+Cons: Not ideal for complex data analysis, bulky file size.
+
+Pros and Cons of XML:
+Pros: Supports complex hierarchical structures, provides validation (DTD/XSD).
+Cons: Verbose and large files, slower processing compared to JSON.
+
+Pros and Cons of Parquet:
+Pros: Efficient for large datasets, optimized for analytical queries, compact storage format.
+Cons: Less human-readable, not as commonly used as JSON/XML for web data exchange.
+
 print("Parquet Data Imported:")
 print(head(imported_parquet_data))
 
