@@ -17,7 +17,9 @@ library(jsonlite)
 library(htmlTable)
 library(XML)
 library(arrow)
+```
 
+```{r create-dataset}
 # Create the original dataset as a data frame
 data <- data.frame(
   Category = c("Electronics", "Electronics", "Electronics", "Electronics", 
@@ -52,17 +54,69 @@ data <- data.frame(
                         "Material: Graphite, Color: Black", "Material: Aluminum, Color: Silver", 
                         "Material: Aluminum, Color: Silver")
 )
+```
 
+### Convert to JSON and Import Back
+```{r json-format}
 # 1. Convert to JSON and Import Back
 json_data <- toJSON(data, pretty = TRUE)
 write(json_data, "CUNYMart_data.json")
 imported_json_data <- fromJSON("CUNYMart_data.json")
 
+# Print JSON Imported Data
+print("JSON Data Imported:")
+print(head(imported_json_data))
+```
+
+- **JSON Structure**: Each row of the dataset is represented as a JSON object, with keys as column names and values as cell data. The entire dataset is an array of these objects. The structure allows easy data interchange, especially in web applications. For example:
+  ```json
+  [
+    {
+      "Category": "Electronics",
+      "Item_Name": "Smartphone",
+      "Item_ID": 101,
+      "Brand": "TechBrand",
+      "Price": 699.99,
+      "Variation_ID": "101-A",
+      "Variation_Details": "Color: Black, Storage: 64GB"
+    },
+    ...
+  ]
+  ```
+  
+**Pros and Cons of Json:**
+
+Pros: Easy to read and write, widely used in web APIs, supports hierarchical data structures. Cons: Can be less efficient for very large datasets, lacks schema validation.
+
+### Convert to HTML and Import Back
+```{r html-format}
 # 2. Convert to HTML and Import Back
 html_data <- htmlTable(data)
 write(html_data, "CUNYMart_data.html")
 html_raw <- readLines("CUNYMart_data.html")  # Importing as plain text
 
+# Print HTML Imported Data (raw text)
+print("HTML Data Imported (raw text):")
+print(head(html_raw))
+```
+
+- **HTML Structure**: The dataset is represented in a tabular format, with `<table>` tags containing rows (`<tr>`) and cells (`<td>`). This format is suitable for displaying data in web browsers. The HTML table structure looks like:
+  ```html
+  <table border="1">
+    <tr>
+      <th>Category</th><th>Item Name</th><th>Item ID</th><th>Brand</th><th>Price</th><th>Variation ID</th><th>Variation Details</th>
+    </tr>
+    <tr>
+      <td>Electronics</td><td>Smartphone</td><td>101</td><td>TechBrand</td><td>699.99</td><td>101-A</td><td>Color: Black, Storage: 64GB</td>
+    </tr>
+    ...
+  </table>
+  ```
+**Pros and Cons of HTML:**
+Pros: Suitable for displaying data in web browsers, human-readable, supports styling. Cons: Not ideal for complex data analysis, bulky file size.
+
+### Convert to XML and Import Back
+```{r xml-format}
 # 3. Convert to XML and Import Back
 xml_data <- newXMLNode("Inventory")
 for (i in 1:nrow(data)) {
@@ -74,40 +128,43 @@ for (i in 1:nrow(data)) {
 saveXML(xml_data, file = "CUNYMart_data.xml")
 imported_xml_data <- xmlToDataFrame("CUNYMart_data.xml")
 
+# Print XML Imported Data
+print("XML Data Imported:")
+print(head(imported_xml_data))
+```
+
+- **XML Structure**: Each row is represented by an `<Item>` element, and each column is represented by child nodes within the `<Item>`. This nested structure is well-suited for hierarchical data but is more verbose. The XML structure looks like:
+  ```xml
+  <Inventory>
+    <Item>
+      <Category>Electronics</Category>
+      <Item_Name>Smartphone</Item_Name>
+      <Item_ID>101</Item_ID>
+      <Brand>TechBrand</Brand>
+      <Price>699.99</Price>
+      <Variation_ID>101-A</Variation_ID>
+      <Variation_Details>Color: Black, Storage: 64GB</Variation_Details>
+    </Item>
+    ...
+  </Inventory>
+  ```
+**Pros and Cons of XML:**
+
+Pros: Supports complex hierarchical structures, provides validation (DTD/XSD). Cons: Verbose and large files, slower processing compared to JSON.
+
+### Convert to Parquet and Import Back
+```{r parquet-format}
 # 4. Convert to Parquet and Import Back
 write_parquet(data, "CUNYMart_data.parquet")
 imported_parquet_data <- read_parquet("CUNYMart_data.parquet")
 
-# Print summaries to verify imports
-print("JSON Data Imported:")
-print(head(imported_json_data))
-
-print("HTML Data Imported (raw text):")
-print(head(html_raw))
-
-print("XML Data Imported:")
-print(head(imported_xml_data))
-
+# Print Parquet Imported Data
 print("Parquet Data Imported:")
 print(head(imported_parquet_data))
-
 ```
 
+- **Parquet Structure**: Parquet uses a columnar storage format, optimizing for storage and retrieval efficiency. It is particularly suitable for large datasets used in analytical contexts. The structure is represented as schema metadata for each column, making it highly efficient for querying specific columns in big data environments.
 
-Pros and Cons of Json:
+**Pros and Cons of Parquet:**
 
-Pros: Easy to read and write, widely used in web APIs, supports hierarchical data structures.
-Cons: Can be less efficient for very large datasets, lacks schema validation.
-
-Pros and Cons of HTML:
-Pros: Suitable for displaying data in web browsers, human-readable, supports styling.
-Cons: Not ideal for complex data analysis, bulky file size.
-
-Pros and Cons of XML:
-Pros: Supports complex hierarchical structures, provides validation (DTD/XSD).
-Cons: Verbose and large files, slower processing compared to JSON.
-
-Pros and Cons of Parquet:
-Pros: Efficient for large datasets, optimized for analytical queries, compact storage format.
-Cons: Less human-readable, not as commonly used as JSON/XML for web data exchange.
-
+Pros: Efficient for large datasets, optimized for analytical queries, compact storage format. Cons: Less human-readable, not as commonly used as JSON/XML for web data exchange.
