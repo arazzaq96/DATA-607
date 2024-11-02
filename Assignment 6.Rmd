@@ -1,0 +1,56 @@
+---
+title: "Assignment 6 DATA 607"
+author: "Ariba Mandavia"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+# Set CRAN repository to avoid mirror issue
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+```
+
+
+```{r}
+install.packages("httr")
+install.packages("jsonlite")
+
+library(httr)
+library(jsonlite)
+
+# Your API key 
+api_key <- "wMBrGQ5plAtdpHmPeLO8Dm8NkQqXe9j2"
+
+# Correct base URL for the Top Stories API (technology section)
+base_url <- "https://api.nytimes.com/svc/topstories/v2/technology.json"
+
+# Make the GET request using the correct query parameter for the API key
+response <- GET(url = base_url, query = list("api-key" = api_key))
+
+# Check the status of the response
+if (status_code(response) == 200) {
+  # Parse the JSON response to a list
+  response_content <- content(response, as = "text")
+  json_data <- fromJSON(response_content)
+  
+  # Extract the list of results
+  top_stories <- json_data$results
+  
+  # Convert the list to a DataFrame
+  top_stories_df <- as.data.frame(top_stories)
+  
+  # Print the first few rows of the DataFrame
+  head(top_stories_df)
+} else {
+  # Print the full response for debugging
+  print(response)
+  response_content <- content(response, as = "text", encoding = "UTF-8")
+  print(response_content)
+}
+
+
+
+```
+
