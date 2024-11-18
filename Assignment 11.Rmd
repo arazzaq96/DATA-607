@@ -1,0 +1,52 @@
+---
+title: Extra Credit Assignment
+Author: Ariba Mandavia
+
+---
+
+```{r}
+# Load necessary libraries
+library(readxl)
+
+# Load the movie ratings data from Excel file
+file_path <- "/Users/aribarazzaq/Downloads/MovieRatings (1).xlsx"
+
+# Load the MovieRatings and Global Baseline sheets
+movie_ratings <- read_excel(file_path, sheet = "MovieRatings")
+global_baseline <- read_excel(file_path, sheet = "Global Baseline")
+
+# View the structure of the MovieRatings dataset
+head(movie_ratings)
+
+# Calculate the global average rating across all movies and critics
+ratings <- movie_ratings[, -1]  # Exclude the 'Critic' column
+all_ratings <- as.numeric(unlist(ratings))
+global_average <- mean(all_ratings, na.rm = TRUE)
+
+# Calculate movie-specific biases
+movie_biases <- colMeans(ratings, na.rm = TRUE) - global_average
+
+# Calculate critic-specific biases
+critic_biases <- rowMeans(ratings, na.rm = TRUE) - global_average
+
+# Create a Global Baseline Estimate recommendation function
+recommend_movie <- function(critic_name, movie_name) {
+  # Find the critic row and movie column
+  critic_index <- which(movie_ratings$Critic == critic_name)
+  movie_index <- which(names(movie_ratings) == movie_name)
+  
+  # Get the critic and movie bias
+  critic_bias <- critic_biases[critic_index]
+  movie_bias <- movie_biases[movie_index - 1]  # Adjust for 'Critic' column
+  
+  # Calculate the Global Baseline Estimate
+  global_baseline_estimate <- global_average + critic_bias + movie_bias
+  
+  return(global_baseline_estimate)
+}
+
+# Example usage: recommend a movie for Charley
+recommend_movie("Charley", "Deadpool")
+
+```
+
