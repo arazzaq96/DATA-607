@@ -1,0 +1,329 @@
+---
+title: "Project 4 Data 607"
+output: html_document
+date: "2024-12-07"
+runtime: shiny
+---
+
+```{r}
+# Install required libraries if not already installed
+if (!require(tm)) install.packages("tm")
+if (!require(e1071)) install.packages("e1071")
+if (!require(caret)) install.packages("caret")
+if (!require(wordcloud)) install.packages("wordcloud")
+
+# Load libraries
+library(tm)
+library(e1071)
+library(caret)
+library(wordcloud)
+
+
+```
+
+```{r}
+# Define directories for spam and ham emails
+spam_dir <- "/Users/aribarazzaq/Desktop/Project 4 Data 607/spam_2"
+ham_dir <- "/Users/aribarazzaq/Desktop/Project 4 Data 607/easy_ham"
+
+# Load spam and ham emails as a VCorpus
+spam_emails <- VCorpus(DirSource(spam_dir, encoding = "UTF-8"), readerControl = list(reader = readPlain))
+ham_emails <- VCorpus(DirSource(ham_dir, encoding = "UTF-8"), readerControl = list(reader = readPlain))
+
+```
+
+```{r}
+# Check the number of documents in each corpus
+length(spam_emails)  # Number of spam emails
+length(ham_emails)   # Number of ham emails
+
+# Inspect one email
+inspect(spam_emails[[1]])
+inspect(ham_emails[[1]])
+
+```
+
+```{r}
+clean_invalid_utf8 <- function(corpus) {
+  tm_map(corpus, content_transformer(function(x) {
+    iconv(x, from = "UTF-8", to = "UTF-8", sub = "")  # Replace invalid characters with an empty string
+  }))
+}
+
+# Apply the function to both spam and ham corpora
+spam_emails <- clean_invalid_utf8(spam_emails)
+ham_emails <- clean_invalid_utf8(ham_emails)
+
+```
+
+```{r}
+remove_non_printable <- function(corpus) {
+  tm_map(corpus, content_transformer(function(x) {
+    gsub("[^[:print:]]", "", x)  # Remove non-printable characters
+  }))
+}
+
+# Apply the function to both corpora
+spam_emails <- remove_non_printable(spam_emails)
+ham_emails <- remove_non_printable(ham_emails)
+
+```
+
+```{r}
+clean_corpus <- function(corpus) {
+  corpus <- tm_map(corpus, content_transformer(tolower))            # Convert to lowercase
+  corpus <- tm_map(corpus, removePunctuation)                      # Remove punctuation
+  corpus <- tm_map(corpus, removeNumbers)                          # Remove numbers
+  corpus <- tm_map(corpus, removeWords, stopwords("en"))           # Remove stopwords
+  corpus <- tm_map(corpus, stripWhitespace)                        # Remove extra whitespace
+  corpus <- tm_map(corpus, content_transformer(function(x) {
+    gsub("[^[:alnum:][:space:]]", "", x)  # Remove non-alphanumeric characters
+  }))
+  return(corpus)
+}
+
+# Re-clean the corpora
+spam_emails <- clean_corpus(spam_emails)
+ham_emails <- clean_corpus(ham_emails)
+
+```
+
+```{r}
+# Test UTF-8 cleaning
+inspect(spam_emails[[1]])
+inspect(ham_emails[[1]])
+
+# Test cleaned corpus
+inspect(spam_emails[[1]])
+inspect(ham_emails[[1]])
+
+```
+
+```{r}
+# Combine corpora
+combined_corpus <- c(spam_emails, ham_emails)
+
+# Create Document-Term Matrix
+dtm <- DocumentTermMatrix(combined_corpus)
+
+# Reduce sparsity by removing sparse terms
+dtm <- removeSparseTerms(dtm, 0.99)
+
+# Inspect the reduced DTM
+inspect(dtm[1:5, 1:5])
+
+# Calculate sparsity manually
+sparsity <- function(dtm) {
+  total_entries <- prod(dim(dtm))
+  non_zero_entries <- length(dtm$v)
+  return(1 - (non_zero_entries / total_entries))
+}
+
+# Print sparsity
+sparsity_value <- sparsity(dtm)
+print(paste("Sparsity:", sparsity_value))
+
+```
+
+```{r}
+# Convert DTM to a data frame
+dtm_data <- as.data.frame(as.matrix(dtm))
+
+# Add labels: first half spam, second half ham
+dtm_data$label <- factor(c(rep("spam", length(spam_emails)), rep("ham", length(ham_emails))))
+
+```
+
+```{r}
+# Check the structure of the data frame
+str(dtm_data)
+
+# Ensure labels are correctly assigned
+table(dtm_data$label)
+
+```
+
+```{r}
+# Split data
+set.seed(123)
+train_indices <- createDataPartition(dtm_data$label, p = 0.8, list = FALSE)
+train_data <- dtm_data[train_indices, ]
+test_data <- dtm_data[-train_indices, ]
+
+```
+
+```{r}
+# Check proportions of training and test sets
+table(train_data$label)
+table(test_data$label)
+
+```
+
+```{r}
+# Train Naive Bayes model
+nb_model <- naiveBayes(label ~ ., data = train_data)
+
+```
+
+```{r}
+# Inspect the Naive Bayes model
+print(nb_model)
+
+```
+
+```{r}
+# Make predictions
+predictions <- predict(nb_model, newdata = test_data)
+
+# Generate a confusion matrix
+conf_matrix <- confusionMatrix(predictions, test_data$label)
+
+# Print results
+print(conf_matrix)
+
+```
+
+```{r}
+# Example email
+new_email <- "Congratulations! You've won a $1000 gift card. Click here to claim."
+
+# Preprocess the new email
+new_email_corpus <- VCorpus(VectorSource(new_email))
+new_email_corpus <- clean_corpus(new_email_corpus)
+
+# Create DTM for the new email using the original dictionary
+new_email_dtm <- DocumentTermMatrix(new_email_corpus, control = list(dictionary = Terms(dtm)))
+
+# Convert to data frame
+new_email_features <- as.data.frame(as.matrix(new_email_dtm))
+
+# Predict
+new_prediction <- predict(nb_model, new_email_features)
+print(new_prediction)
+
+```
+
+```{r}
+# Confusion matrix from Step 9
+confusion_matrix <- confusionMatrix(predictions, test_data$label)
+
+# Print confusion matrix
+print(confusion_matrix)
+
+# Analyze false positives and false negatives
+false_positives <- which(predictions == "spam" & test_data$label == "ham")
+false_negatives <- which(predictions == "ham" & test_data$label == "spam")
+
+# Inspect some misclassified examples
+print("False Positives:")
+print(test_data[false_positives, ])
+
+print("False Negatives:")
+print(test_data[false_negatives, ])
+
+```
+
+```{r}
+dtm_tfidf <- DocumentTermMatrix(combined_corpus, control = list(weighting = weightTfIdf))
+
+```
+
+```{r}
+library(text2vec)
+bigram_tokenizer <- function(x) unlist(lapply(ngrams(words(x), 2), paste, collapse = " "), use.names = FALSE)
+dtm_bigrams <- DocumentTermMatrix(combined_corpus, control = list(tokenize = bigram_tokenizer))
+
+```
+
+```{r}
+# Define train control for cross-validation
+train_control <- trainControl(method = "cv", number = 5)
+
+# Train a Naive Bayes model with caret
+nb_tuned <- train(label ~ ., data = train_data, method = "naive_bayes", trControl = train_control)
+
+# Make predictions on the test data
+nb_predictions <- predict(nb_tuned, test_data)
+
+# Evaluate the tuned model using a confusion matrix
+tuned_confusion_matrix <- confusionMatrix(nb_predictions, test_data$label)
+
+# Print the results
+print(tuned_confusion_matrix)
+
+```
+
+```{r}
+# Exclude the label column
+dtm_features <- dtm_data[, -ncol(dtm_data)]  # Exclude the 'label' column
+
+# Calculate term frequencies
+spam_terms <- colSums(as.matrix(dtm_features[dtm_data$label == "spam", ]))
+ham_terms <- colSums(as.matrix(dtm_features[dtm_data$label == "ham", ]))
+
+# Generate word cloud for spam
+wordcloud(names(spam_terms), spam_terms, max.words = 100, scale = c(3, 0.5), colors = "red", main = "Spam Words")
+
+# Generate word cloud for ham
+wordcloud(names(ham_terms), ham_terms, max.words = 100, scale = c(3, 0.5), colors = "blue", main = "Ham Words")
+
+```
+
+```{r}
+# Test on new examples
+test_email_1 <- "Win a free vacation to the Bahamas. Click here to claim now!"
+test_email_2 <- "Let's meet tomorrow to discuss the project deliverables."
+
+test_emails <- c(test_email_1, test_email_2)
+test_emails_corpus <- VCorpus(VectorSource(test_emails))
+test_emails_corpus <- clean_corpus(test_emails_corpus)
+
+# Create a DTM for test emails using the original dictionary
+test_emails_dtm <- DocumentTermMatrix(test_emails_corpus, control = list(dictionary = Terms(dtm)))
+test_emails_features <- as.data.frame(as.matrix(test_emails_dtm))
+
+# Predict labels for test emails
+test_predictions <- predict(nb_model, test_emails_features)
+
+# Display predictions
+print(test_predictions)
+
+```
+
+```{r}
+# Install Shiny if not installed
+if (!require(shiny)) install.packages("shiny")
+library(shiny)
+
+# Define UI
+ui <- fluidPage(
+  titlePanel("Spam Email Classifier"),
+  sidebarLayout(
+    sidebarPanel(
+      textAreaInput("email_text", "Enter Email:", rows = 5, placeholder = "Type your email content here..."),
+      actionButton("predict_btn", "Classify")
+    ),
+    mainPanel(
+      h3("Prediction:"),
+      textOutput("prediction_output")
+    )
+  )
+)
+
+# Define server
+server <- function(input, output) {
+  observeEvent(input$predict_btn, {
+    email_text <- input$email_text
+    email_corpus <- VCorpus(VectorSource(email_text))
+    email_corpus <- clean_corpus(email_corpus)
+    email_dtm <- DocumentTermMatrix(email_corpus, control = list(dictionary = Terms(dtm)))
+    email_features <- as.data.frame(as.matrix(email_dtm))
+    prediction <- predict(nb_model, email_features)
+    output$prediction_output <- renderText(prediction)
+  })
+}
+
+# Run the app
+shinyApp(ui = ui, server = server)
+
+```
