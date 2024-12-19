@@ -1,0 +1,96 @@
+---
+title: Data 607 Final Project
+Author: Ariba Mandavia
+---
+
+
+```{r}
+
+# Load necessary libraries
+library(tidyverse)
+
+# Load datasets
+zillow_data <- read.csv("/Users/aribarazzaq/Desktop/house-prices-advanced-regression-techniques/Metro_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv")
+train_data <- read.csv("/Users/aribarazzaq/Desktop/house-prices-advanced-regression-techniques/train.csv")
+test_data <- read.csv("/Users/aribarazzaq/Desktop/house-prices-advanced-regression-techniques/test.csv")
+
+# Step 1: Transform Zillow dataset
+# Select relevant columns and rename them to align with Kaggle's schema
+zillow_transformed <- zillow_data %>%
+  select(RegionName, StateName, X2024.10.31) %>%
+  rename(Neighborhood = RegionName, ZHVI_2024 = X2024.10.31)
+
+# Step 2: Filter Zillow data for Ames, IA
+# Identify data specific to "Ames, IA" for integration
+ames_zillow <- zillow_transformed %>% filter(Neighborhood == "Ames, IA")
+
+# Step 3: Extract ZHVI value for Ames
+# Assign the home value index for Ames to a variable for mapping
+ames_zhvi_value <- ames_zillow$ZHVI_2024[1]
+
+# Step 4: Add ZHVI to Kaggle Datasets
+# Apply the ZHVI value for Ames to all neighborhoods in Kaggle datasets
+train_data <- train_data %>%
+  mutate(ZHVI_2024 = ames_zhvi_value)
+
+test_data <- test_data %>%
+  mutate(ZHVI_2024 = ames_zhvi_value)
+
+# Step 5: Verify the Updated Datasets
+# Check a few rows of the updated datasets to confirm the addition of ZHVI
+train_data_updated <- train_data %>% select(Neighborhood, ZHVI_2024) %>% head()
+test_data_updated <- test_data %>% select(Neighborhood, ZHVI_2024) %>% head()
+
+# Step 6: Exploratory Visualizations
+# Visualize the relationship between ZHVI_2024 and SalePrice in train data
+library(ggplot2)
+
+# Scatter plot: ZHVI_2024 vs. SalePrice
+scatter_plot <- ggplot(train_data, aes(x = ZHVI_2024, y = SalePrice)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  labs(title = "Scatter Plot: ZHVI_2024 vs SalePrice",
+       x = "ZHVI (Zillow Home Value Index)",
+       y = "Sale Price") +
+  theme_minimal()
+
+print(scatter_plot)
+
+# Histogram of SalePrice
+histogram <- ggplot(train_data, aes(x = SalePrice)) +
+  geom_histogram(fill = "skyblue", bins = 30, color = "black") +
+  labs(title = "Distribution of Sale Prices",
+       x = "Sale Price",
+       y = "Frequency") +
+  theme_minimal()
+
+print(histogram)
+
+# Step 7: Statistical Analysis
+# Correlation between ZHVI_2024 and SalePrice
+correlation <- cor(train_data$ZHVI_2024, train_data$SalePrice, use = "complete.obs")
+print(paste("Correlation between ZHVI_2024 and SalePrice:", correlation))
+
+# Linear model: SalePrice vs. ZHVI_2024
+lm_model <- lm(SalePrice ~ ZHVI_2024, data = train_data)
+summary_lm <- summary(lm_model)
+print(summary_lm)
+
+# Step 8: Save Outputs for Reproducibility
+# Save updated datasets
+write.csv(train_data, "~/updated_train_data.csv", row.names = FALSE)
+write.csv(test_data, "~/updated_test_data.csv", row.names = FALSE)
+
+# Display results
+print("Updated Train Data")
+print(train_data_updated)
+
+print("Updated Test Data")
+print(test_data_updated)
+
+
+```
+
+
+
+
+
